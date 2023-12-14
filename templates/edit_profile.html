@@ -1,0 +1,81 @@
+<!-- Inside templates/edit_profile.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+ <div class="main-content">
+    <div class="login-container">
+        <h2 class="login-title">Edit Profile</h2>
+
+        <form method="POST" action="">
+            {{ form.csrf_token }}
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control", placeholder="Enter your name") }}
+            </div>
+            <div class="form-group">
+                {{ form.billing_address_id.label(class="form-label") }}
+                {{ form.billing_address_id(class="form-control", placeholder="Enter your billing address ID") }}
+            </div>
+            <button type="submit" class="login-button">Save Changes</button>
+        </form>
+    </div>
+</div>
+    <style>
+    .main-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 350px;
+<!--            text-align: center;-->
+        }
+
+        .login-title {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .login-button:hover {
+            background-color: #0069d9;
+        }
+    </style>
+{% endblock %}

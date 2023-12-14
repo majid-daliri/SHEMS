@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 350px;
+        }
+
+        h1 {
+            color: #343a40;
+            margin-bottom: 24px;
+        }
+
+        p {
+            margin: 10px 0;
+            color: #343a40;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        {% if current_user %}
+            <h1>Welcome, {{ current_user.username }}!</h1>
+            <p>View your profile: <a href="{{ url_for('profile') }}">Profile</a></p>
+            <p>Edit your profile: <a href="{{ url_for('edit_profile') }}">Edit Profile</a></p>
+            <p><a href="{{ url_for('logout') }}">Logout</a></p>
+        {% else %}
+            <h1>Welcome to the Energy Monitoring System!</h1>
+            <p><a href="{{ url_for('register') }}">Register</a></p>
+            <p><a href="{{ url_for('login') }}">Login</a></p>
+        {% endif %}
+    </div>
+</body>
+</html>

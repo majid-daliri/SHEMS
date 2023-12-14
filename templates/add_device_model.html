@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="main-content">
+    <div class="login-container">
+      <h2 class="login-title">Add Device Model</h2>
+      <form method="POST" action="{{ url_for('add_device_model') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+          {{ form.type.label(class="form-label") }}
+          {{ form.type(class="form-control") }}
+          {% if form.type.errors %}
+            <small class="form-text text-danger">{{ form.type.errors[0] }}</small>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.model_number.label(class="form-label") }}
+          {{ form.model_number(class="form-control") }}
+          {% if form.model_number.errors %}
+            <small class="form-text text-danger">{{ form.model_number.errors[0] }}</small>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.submit(class="btn btn-primary login-button") }}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .main-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 400px; /* Adjusted width */
+      max-width: 90%; /* Ensures responsiveness */
+    }
+
+    .login-title {
+      color: #343a40;
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .login-button:hover {
+      background-color: #0069d9;
+    }
+  </style>
+{% endblock %}
