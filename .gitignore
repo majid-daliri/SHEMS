@@ -1,4 +1,6 @@
 # .gitignore content
 .venv/
 __pycache__/
+.idea/
+instance/site.db
 
