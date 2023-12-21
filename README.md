@@ -15,7 +15,7 @@ To set up the SHEMS project on your local machine, follow these steps:
 
 1. **Clone the Repository:**
    ```bash
-   git clone [repository-url]
+   git clone https://github.com/majid-daliri/SHEMS.git
    
 2. **Clone the Repository:**
    ```bash
