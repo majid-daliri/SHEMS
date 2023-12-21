@@ -5,6 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from forms.AddEventForm import AddEventForm
 from forms.AddEventLabelForm import AddEventLabelForm
 from forms.AddServiceLocationForm import AddServiceLocationForm
@@ -41,41 +43,52 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    form = RegistrationForm()
+    form = RegistrationForm(request.form)
     error_message = None
 
-    if form.validate_on_submit():
-        existing_user = User.query.filter_by(username=form.username.data).first()
-        if existing_user:
+    if request.method == 'POST' and form.validate():
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM user WHERE username = ?", (form.username.data,))
+        if cursor.fetchone():
             error_message = "Username already exists. Please choose a different one."
         else:
-            new_user = User(username=form.username.data, password=form.password.data, name=form.name.data,
-                            billing_address_id=form.billing_address_id.data)
-            db.session.add(new_user)
-            db.session.commit()
-
-            session['user_id'] = new_user.id
+            hashed_password = generate_password_hash(form.password.data)
+            cursor.execute("INSERT INTO user (username, password, name, billing_address_id) VALUES (?, ?, ?, ?)",
+                           (form.username.data, hashed_password, form.name.data, form.billing_address_id.data))
+            conn.commit()
+            conn.close()
 
             return redirect(url_for('index'))
+
+        conn.close()
 
     return render_template('register.html', form=form, error_message=error_message)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
+    form = LoginForm(request.form)
     error_message = None
 
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user and user.password == form.password.data:
-            session['user_id'] = user.id
+    if request.method == 'POST' and form.validate():
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM user WHERE username = ?", (form.username.data,))
+        user = cursor.fetchone()
+
+        if user and check_password_hash(user[2], form.password.data):
+            session['user_id'] = user[0]
             return redirect(url_for('index'))
         else:
             if not user:
                 error_message = "Invalid username. Please check your username and try again."
             else:
                 error_message = "Invalid password. Please check your password and try again."
+
+        conn.close()
 
     return render_template('login.html', form=form, current_user=None, error_message=error_message)
 
@@ -119,19 +132,28 @@ def edit_profile():
 
 @app.route('/add_service_location', methods=['GET', 'POST'])
 def add_service_location():
-    form = AddServiceLocationForm()
+    form = AddServiceLocationForm(request.form)
 
-    if form.validate_on_submit():
-        new_location = ServiceLocation(
-            user_id=session['user_id'],
-            address=form.address.data,
-            unit_number=form.unit_number.data,
-            square_footage=form.square_footage.data,
-            bedrooms=form.bedrooms.data,
-            occupants=form.occupants.data
-        )
-        db.session.add(new_location)
-        db.session.commit()
+    if request.method == 'POST' and form.validate():
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        sql = """
+        INSERT INTO service_location (user_id, address, unit_number, square_footage, bedrooms, occupants) 
+        VALUES (?, ?, ?, ?, ?, ?)
+        """
+        cursor.execute(sql, (
+            session['user_id'],
+            form.address.data,
+            form.unit_number.data,
+            form.square_footage.data,
+            form.bedrooms.data,
+            form.occupants.data
+        ))
+
+        conn.commit()
+        conn.close()
+
         return redirect(url_for('profile'))
 
     return render_template('add_service_location.html', form=form)
@@ -154,8 +176,8 @@ def edit_service_location(location_id):
         WHERE id = ?
         """
         cursor.execute(sql, (
-        form.address.data, form.unit_number.data, form.square_footage.data, form.bedrooms.data, form.occupants.data,
-        location_id))
+            form.address.data, form.unit_number.data, form.square_footage.data, form.bedrooms.data, form.occupants.data,
+            location_id))
 
         conn.commit()
         conn.close()
@@ -320,7 +342,6 @@ def add_energy_price():
 @app.route('/energy_consumption/<int:service_location_id>/<string:time_resolution>')
 def energy_consumption(service_location_id, time_resolution):
     if time_resolution == 'day':
-        print("hi")
         query = """
             SELECT DATE(e.Timestamp) AS date, SUM(e.Value) AS total_energy, ed.Service_Location_ID
             FROM event_data e
@@ -331,7 +352,6 @@ def energy_consumption(service_location_id, time_resolution):
         con2 = sqlite3.connect(DB_PATH)
         cur2 = con2.cursor()
         data = cur2.execute(query, (service_location_id,)).fetchall()
-        print(data, service_location_id)
     elif time_resolution == 'month':
         query = """
             SELECT strftime('%m', e.Timestamp) AS month, SUM(e.Value) AS total_energy
