@@ -1,123 +1,40 @@
+import sqlite3
+
 from flask import Flask, flash, render_template, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField ,IntegerField, DateField
-from wtforms.validators import DataRequired, DataRequired, InputRequired
-from wtforms.fields import DateField
+from wtforms import DateTimeLocalField, FloatField
 from datetime import datetime
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField, IntegerField, DateField, SelectField
 from wtforms.validators import DataRequired, InputRequired
 
+from forms.AddEventForm import AddEventForm
+from forms.AddEventLabelForm import AddEventLabelForm
+from forms.AddServiceLocationForm import AddServiceLocationForm
+from forms.DeviceModelForm import DeviceModelForm
+from forms.EditProfileForm import EditProfileForm
+from forms.EditServiceLocationForm import EditServiceLocationForm
+from forms.EnergyPriceForm import EnergyPriceForm
+from forms.EnrollDeviceForm import EnrollDeviceForm
+from forms.LoginForm import LoginForm
+from forms.RegistrationForm import RegistrationForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SECRET_KEY'] = 'your_secret_key'
+DB_PATH = "/Users/machouse/WorkSpace/Smart-Home-Energy-Management-System/instance/site.db"
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-    name = db.Column(db.String(100), nullable=True)  # Add this line for the name field
-    billing_address_id = db.Column(db.Integer, nullable=True)  # Add this line for the billing_address_id field
-    service_locations = db.relationship('ServiceLocation', backref='user', lazy=True)
-
-class RegistrationForm(FlaskForm):
-    username = StringField('Username')
-    password = PasswordField('Password')
-    name = StringField('Name')  # Add this line for the name field
-    billing_address_id = StringField('Billing Address ID')  # Add this line for the billing_address_id field
-    submit = SubmitField('Register')
-
-class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
-
-class ServiceLocation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    address = db.Column(db.String(255), nullable=False)
-    unit_number = db.Column(db.String(20), nullable=True)
-    square_footage = db.Column(db.Integer, nullable=True)
-    bedrooms = db.Column(db.Integer, nullable=True)
-    occupants = db.Column(db.Integer, nullable=True)
-
-class AddServiceLocationForm(FlaskForm):
-    customer = StringField('Customer')
-    address = StringField('Address')
-    unit_number = StringField('Unit Number')
-    date_taken_over = DateField('Date Taken Over', validators=[DataRequired()])
-    square_footage = IntegerField('Square Footage')
-    bedrooms = IntegerField('Bedrooms')
-    occupants = IntegerField('Occupants')
-    submit = SubmitField('Add Service Location')
-
-class EditServiceLocationForm(FlaskForm):
-    customer = StringField('Customer', validators=[InputRequired()])
-    address = StringField('Address', validators=[InputRequired()])
-    unit_number = StringField('Unit Number', validators=[InputRequired()])
-    date_taken_over = DateField('Date Taken Over', validators=[InputRequired()])
-    square_footage = IntegerField('Square Footage', validators=[InputRequired()])
-    bedrooms = IntegerField('Bedrooms', validators=[InputRequired()])
-    occupants = IntegerField('Occupants', validators=[InputRequired()])
-    submit = SubmitField('Save Changes')
-
-class EditProfileForm(FlaskForm):
-    name = StringField('Name', validators=[InputRequired()])
-    billing_address_id = StringField('Billing Address ID', validators=[InputRequired()])
-    submit = SubmitField('Save Changes')
-
-class DeviceModel(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(50), nullable=False)
-    model_number = db.Column(db.String(50), nullable=False)
-    enrolled_devices = db.relationship('EnrolledDevice', backref='device_model', lazy=True)
-
-class EnrolledDevice(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    service_location_id = db.Column(db.Integer, db.ForeignKey('service_location.id'), nullable=False)
-    model_id = db.Column(db.Integer, db.ForeignKey('device_model.id'), nullable=False)
-    events = db.relationship('EventData', backref='enrolled_device', lazy=True)
-    service_location = db.relationship('ServiceLocation', backref='enrolled_devices')
-
-class EventData(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    device_id = db.Column(db.Integer, db.ForeignKey('enrolled_device.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    label_id = db.Column(db.Integer, db.ForeignKey('event_label.id'), nullable=False)
-    value = db.Column(db.Float, nullable=False)
-
-class EventLabel(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    label_name = db.Column(db.String(50), nullable=False, unique=True)
-    events = db.relationship('EventData', backref='event_label', lazy=True)
-
-class Address(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    address = db.Column(db.String(255), nullable=False)
-    zip_code = db.Column(db.String(10), nullable=False)
-
-class EnergyPrice(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    zip_code = db.Column(db.String(10), db.ForeignKey('address.zip_code'), nullable=False)
-    hour = db.Column(db.Integer, nullable=False)
-    rate = db.Column(db.Float, nullable=False)
-
-class DeviceModelForm(FlaskForm):
-    type = StringField('Device Type', validators=[DataRequired()])
-    model_number = StringField('Model Number', validators=[DataRequired()])
-    submit = SubmitField('Add Device Model')
-
-class EnrollDeviceForm(FlaskForm):
-    device_type = SelectField('Device Type', coerce=int, validators=[DataRequired()])
-    service_location = SelectField('Service Location', coerce=int, validators=[DataRequired()])
-    submit = SubmitField('Enroll Device')
-
-
+from models.User import User
+from models.Device import DeviceModel
+from models.ServiceLocation import ServiceLocation
+from models.Address import Address
+from models.EventData import EventData
+from models.EnergyPrice import EnergyPrice
+from models.EnrolledDevice import EnrolledDevice
+from models.EventLabel import EventLabel
 
 
 @app.route('/')
@@ -127,6 +44,7 @@ def index():
         return render_template('index.html', message=f"Welcome, {current_user.username}!", current_user=current_user)
     else:
         return render_template('index.html', message="Welcome to the Energy Monitoring System!", current_user=None)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -138,7 +56,8 @@ def register():
         if existing_user:
             error_message = "Username already exists. Please choose a different one."
         else:
-            new_user = User(username=form.username.data, password=form.password.data, name=form.name.data, billing_address_id=form.billing_address_id.data)
+            new_user = User(username=form.username.data, password=form.password.data, name=form.name.data,
+                            billing_address_id=form.billing_address_id.data)
             db.session.add(new_user)
             db.session.commit()
 
@@ -149,6 +68,7 @@ def register():
 
     return render_template('register.html', form=form, error_message=error_message)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -157,11 +77,9 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.password == form.password.data:
-            # Set a session variable to indicate that the user is logged in
             session['user_id'] = user.id
             return redirect(url_for('index'))
         else:
-            # Provide specific error messages
             if not user:
                 error_message = "Invalid username. Please check your username and try again."
             else:
@@ -169,10 +87,12 @@ def login():
 
     return render_template('login.html', form=form, current_user=None, error_message=error_message)
 
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('login'))
+
 
 @app.route('/profile')
 def profile():
@@ -182,6 +102,7 @@ def profile():
     else:
         return redirect(url_for('login'))
 
+
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     form = EditProfileForm()
@@ -190,21 +111,19 @@ def edit_profile():
         user = User.query.get(session['user_id'])
 
         if form.validate_on_submit():
-            # Update user profile information
             user.name = form.name.data
             user.billing_address_id = form.billing_address_id.data
             db.session.commit()
 
             return redirect(url_for('profile'))
 
-        # Pre-fill the form with existing user details
         form.name.data = user.name
         form.billing_address_id.data = user.billing_address_id
 
         return render_template('edit_profile.html', form=form)
     else:
-        # Handle the case where the user is not logged in
         return redirect(url_for('login'))
+
 
 @app.route('/add_service_location', methods=['GET', 'POST'])
 def add_service_location():
@@ -225,6 +144,7 @@ def add_service_location():
 
     return render_template('add_service_location.html', form=form)
 
+
 @app.route('/edit_service_location/<int:location_id>', methods=['GET', 'POST'])
 def edit_service_location(location_id):
     form = EditServiceLocationForm()
@@ -239,7 +159,6 @@ def edit_service_location(location_id):
         db.session.commit()
         return redirect(url_for('profile'))
 
-    # Pre-fill the form with existing service location details
     form.address.data = location.address
     form.unit_number.data = location.unit_number
     form.square_footage.data = location.square_footage
@@ -248,12 +167,14 @@ def edit_service_location(location_id):
 
     return render_template('edit_service_location.html', form=form, location=location)
 
+
 @app.route('/remove_service_location/<int:location_id>')
 def remove_service_location(location_id):
     location = ServiceLocation.query.get(location_id)
     db.session.delete(location)
     db.session.commit()
     return redirect(url_for('profile'))
+
 
 @app.route('/add_device_model', methods=['GET', 'POST'])
 def add_device_model():
@@ -270,43 +191,20 @@ def add_device_model():
 
     return render_template('add_device_model.html', form=form)
 
-@app.route('/add_device', methods=['GET', 'POST'])
-def add_device():
-    form = AddDeviceForm()
-
-    if form.validate_on_submit():
-        # Create a new device model if it doesn't exist
-        device_model = DeviceModel.query.filter_by(type=form.type.data, model_number=form.model_number.data).first()
-        if not device_model:
-            device_model = DeviceModel(type=form.type.data, model_number=form.model_number.data)
-            db.session.add(device_model)
-            db.session.commit()
-
-        # Create a new enrolled device
-        enrolled_device = EnrolledDevice(service_location_id=session['service_location_id'], device_model_id=device_model.id)
-        db.session.add(enrolled_device)
-        db.session.commit()
-        return redirect(url_for('enroll_device'))
-
-    return render_template('add_device.html', form=form)
 
 @app.route('/enroll_device', methods=['GET', 'POST'])
 def enroll_device():
     form = EnrollDeviceForm()
 
-    # Query all device models for the select field choices
     form.device_type.choices = [(model.id, f"{model.type} - {model.model_number}") for model in DeviceModel.query.all()]
 
-    # Query all service locations for the select field choices
     user_service_locations = ServiceLocation.query.filter_by(user_id=session['user_id']).all()
     form.service_location.choices = [(location.id, location.address) for location in user_service_locations]
 
     if form.validate_on_submit():
-        # Retrieve the selected device model and service location
         selected_device_model = DeviceModel.query.get(form.device_type.data)
         selected_service_location = ServiceLocation.query.get(form.service_location.data)
 
-        # Enroll the device with the selected model and service location
         enrolled_device = EnrolledDevice(
             device_model=selected_device_model,
             service_location=selected_service_location
@@ -314,17 +212,17 @@ def enroll_device():
         db.session.add(enrolled_device)
         db.session.commit()
 
-        # Redirect to the profile page after enrollment
         return redirect(url_for('profile'))
 
     return render_template('enroll_device.html', form=form)
+
 
 @app.route('/enrolled_devices')
 def enrolled_devices():
     if 'user_id' in session:
         user = User.query.get(session['user_id'])
         if user.service_locations:
-            service_location = user.service_locations[0]  # Assuming the user has only one service location
+            service_location = user.service_locations[0]
             enrolled_devices = EnrolledDevice.query.filter_by(service_location_id=service_location.id).all()
             return render_template('enrolled_devices.html', user=user, enrolled_devices=enrolled_devices)
         else:
@@ -333,18 +231,82 @@ def enrolled_devices():
     else:
         return redirect(url_for('login'))
 
+
 @app.route('/remove_enrolled_device/<int:device_id>')
 def remove_enrolled_device(device_id):
     enrolled_device = EnrolledDevice.query.get(device_id)
-    
     if enrolled_device:
-        # Remove the enrolled device from the database
         db.session.delete(enrolled_device)
         db.session.commit()
 
     return redirect(url_for('profile'))
 
 
+@app.route('/add_event_label', methods=['GET', 'POST'])
+def add_event_label():
+    form = AddEventLabelForm()
+
+    con = sqlite3.connect(DB_PATH)
+    cur = con.cursor()
+
+    if form.validate_on_submit():
+        cur.execute("INSERT INTO Event_Label (label_name) VALUES (?)", (form.label_name.data,))
+        con.commit()
+        con.close()
+
+        return redirect(url_for('index'))
+
+    return render_template('add_event_label.html', form=form)
+
+
+@app.route('/add_event/<int:device_id>', methods=['GET', 'POST'])
+def add_event(device_id):
+    form = AddEventForm()
+
+    con = sqlite3.connect(DB_PATH)
+    cur = con.cursor()
+
+    cur.execute("SELECT id, label_name FROM Event_Label")
+    event_labels = cur.fetchall()
+
+    form.label_id.choices = [(label[0], label[1]) for label in event_labels]
+
+    if form.validate_on_submit():
+        if not isinstance(form.timestamp.data, datetime):
+            form.timestamp.data = datetime.strptime(form.timestamp.data, '%Y-%m-%dT%H:%M')
+        cur.execute(
+            "INSERT INTO Event_Data (device_id, timestamp, label_id, value) VALUES (?, ?, ?, ?)",
+            (device_id, form.timestamp.data, form.label_id.data, form.value.data)
+        )
+        con.commit()
+        con.close()
+
+        return redirect(url_for('add_event', device_id=device_id))
+
+    return render_template('add_event.html', form=form, device_id=device_id)
+
+
+@app.route('/add_energy_price', methods=['GET', 'POST'])
+def add_energy_price():
+    form = EnergyPriceForm()
+
+    con = sqlite3.connect(DB_PATH)
+    cur = con.cursor()
+
+    if form.validate_on_submit():
+        if not isinstance(form.hour.data, datetime):
+            form.hour.data = datetime.strptime(form.hour.data, '%Y-%m-%dT%H:%M')
+
+        cur.execute(
+            "INSERT INTO Energy_Price (zip_code, hour, rate) VALUES (?, ?, ?)",
+            (form.zip_code.data, form.hour.data, form.rate.data)
+        )
+        con.commit()
+        con.close()
+
+        return redirect(url_for('index'))
+
+    return render_template('add_energy_price.html', form=form)
 
 
 if __name__ == '__main__':
