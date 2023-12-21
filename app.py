@@ -1,13 +1,9 @@
 import sqlite3
 
-from flask import Flask, flash, render_template, redirect, url_for, session
+from flask import Flask, flash, render_template, redirect, url_for, session, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from wtforms import DateTimeLocalField, FloatField
 from datetime import datetime
-from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, PasswordField, SubmitField, IntegerField, DateField, SelectField
-from wtforms.validators import DataRequired, InputRequired
 
 from forms.AddEventForm import AddEventForm
 from forms.AddEventLabelForm import AddEventLabelForm
@@ -30,11 +26,8 @@ migrate = Migrate(app, db)
 from models.User import User
 from models.Device import DeviceModel
 from models.ServiceLocation import ServiceLocation
-from models.Address import Address
-from models.EventData import EventData
-from models.EnergyPrice import EnergyPrice
 from models.EnrolledDevice import EnrolledDevice
-from models.EventLabel import EventLabel
+from models.EventData import EventData
 
 
 @app.route('/')
@@ -61,7 +54,6 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            # Set the user's session after successful registration
             session['user_id'] = new_user.id
 
             return redirect(url_for('index'))
@@ -147,46 +139,71 @@ def add_service_location():
 
 @app.route('/edit_service_location/<int:location_id>', methods=['GET', 'POST'])
 def edit_service_location(location_id):
-    form = EditServiceLocationForm()
-    location = ServiceLocation.query.get(location_id)
+    form = EditServiceLocationForm(request.form)
 
-    if form.validate_on_submit():
-        location.address = form.address.data
-        location.unit_number = form.unit_number.data
-        location.square_footage = form.square_footage.data
-        location.bedrooms = form.bedrooms.data
-        location.occupants = form.occupants.data
-        db.session.commit()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM service_location WHERE id = ?", (location_id,))
+    location = cursor.fetchone()
+
+    if request.method == 'POST' and form.validate():
+        sql = """
+        UPDATE service_location 
+        SET address = ?, unit_number = ?, square_footage = ?, bedrooms = ?, occupants = ?
+        WHERE id = ?
+        """
+        cursor.execute(sql, (
+        form.address.data, form.unit_number.data, form.square_footage.data, form.bedrooms.data, form.occupants.data,
+        location_id))
+
+        conn.commit()
+        conn.close()
+
         return redirect(url_for('profile'))
 
-    form.address.data = location.address
-    form.unit_number.data = location.unit_number
-    form.square_footage.data = location.square_footage
-    form.bedrooms.data = location.bedrooms
-    form.occupants.data = location.occupants
+    if location:
+        form.address.data = location[1]
+        form.unit_number.data = location[2]
+        form.square_footage.data = location[3]
+        form.bedrooms.data = location[4]
+        form.occupants.data = location[5]
 
+    conn.close()
     return render_template('edit_service_location.html', form=form, location=location)
 
 
 @app.route('/remove_service_location/<int:location_id>')
 def remove_service_location(location_id):
-    location = ServiceLocation.query.get(location_id)
-    db.session.delete(location)
-    db.session.commit()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    sql = "DELETE FROM service_location WHERE id = ?"
+    cursor.execute(sql, (location_id,))
+
+    conn.commit()
+    conn.close()
+
     return redirect(url_for('profile'))
 
 
 @app.route('/add_device_model', methods=['GET', 'POST'])
 def add_device_model():
-    form = DeviceModelForm()
+    form = DeviceModelForm(request.form)
 
-    if form.validate_on_submit():
-        new_device_model = DeviceModel(
-            type=form.type.data,
-            model_number=form.model_number.data
-        )
-        db.session.add(new_device_model)
-        db.session.commit()
+    if request.method == 'POST' and form.validate():
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        sql = """
+        INSERT INTO device_model (type, model_number) 
+        VALUES (?, ?)
+        """
+        cursor.execute(sql, (form.type.data, form.model_number.data))
+
+        conn.commit()
+        conn.close()
+
         return redirect(url_for('add_device_model'))
 
     return render_template('add_device_model.html', form=form)
@@ -217,28 +234,19 @@ def enroll_device():
     return render_template('enroll_device.html', form=form)
 
 
-@app.route('/enrolled_devices')
-def enrolled_devices():
-    if 'user_id' in session:
-        user = User.query.get(session['user_id'])
-        if user.service_locations:
-            service_location = user.service_locations[0]
-            enrolled_devices = EnrolledDevice.query.filter_by(service_location_id=service_location.id).all()
-            return render_template('enrolled_devices.html', user=user, enrolled_devices=enrolled_devices)
-        else:
-            flash("Please add a service location before viewing enrolled devices.", 'warning')
-            return redirect(url_for('add_service_location'))
-    else:
-        return redirect(url_for('login'))
-
-
 @app.route('/remove_enrolled_device/<int:device_id>')
 def remove_enrolled_device(device_id):
-    enrolled_device = EnrolledDevice.query.get(device_id)
-    if enrolled_device:
-        db.session.delete(enrolled_device)
-        db.session.commit()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
 
+    cursor.execute("SELECT * FROM enrolled_device WHERE id = ?", (device_id,))
+    enrolled_device = cursor.fetchone()
+
+    if enrolled_device:
+        cursor.execute("DELETE FROM enrolled_device WHERE id = ?", (device_id,))
+        conn.commit()
+
+    conn.close()
     return redirect(url_for('profile'))
 
 
@@ -312,16 +320,18 @@ def add_energy_price():
 @app.route('/energy_consumption/<int:service_location_id>/<string:time_resolution>')
 def energy_consumption(service_location_id, time_resolution):
     if time_resolution == 'day':
+        print("hi")
         query = """
-            SELECT DATE(e.Timestamp) AS date, SUM(e.Value) AS total_energy
+            SELECT DATE(e.Timestamp) AS date, SUM(e.Value) AS total_energy, ed.Service_Location_ID
             FROM event_data e
             JOIN enrolled_device ed ON e.Device_ID = ed.id
-            WHERE ed.Service_Location_ID = :service_location_id
+            WHERE ed.Service_Location_ID = (?)
             GROUP BY date
         """
         con2 = sqlite3.connect(DB_PATH)
         cur2 = con2.cursor()
         data = cur2.execute(query, (service_location_id,)).fetchall()
+        print(data, service_location_id)
     elif time_resolution == 'month':
         query = """
             SELECT strftime('%m', e.Timestamp) AS month, SUM(e.Value) AS total_energy
