@@ -28,6 +28,165 @@
         .navbar-brand:hover, .nav-link:hover {
             color: #007bff !important;
         }
+
+        .btn-custom {
+            padding: .5rem 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background-color: #dc3545;
+            border: none;
+            border-radius: .25rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .btn-custom:focus {
+            background-color: #138496;
+            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.5);
+        }
+
+        .btn-custom:hover {
+            background-color: #c82333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-custom:active {
+            background-color: #bd2130;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-info-custom {
+            padding: .5rem 1rem; /* Comfortable padding */
+            font-size: 1rem; /* Readable text size */
+            font-weight: 600; /* Bold font for emphasis */
+            color: #fff; /* Contrast text color */
+            background-color: #17a2b8; /* Bootstrap's info color */
+            border: none; /* Remove border for a modern look */
+            border-radius: .2rem; /* Slightly rounded corners for a soft look */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            transition: all 0.2s ease-in-out; /* Smooth transition for hover effects */
+        }
+
+        .btn-info-custom:hover,
+        .btn-info-custom:focus {
+            background-color: #138496;
+            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.5);
+        }
+
+        .btn-info-custom:active {
+            background-color: #117a8b; /* Even darker on active click */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Smaller shadow for pressed effect */
+            transform: translateY(1px); /* Slight move down to mimic a button press */
+        }
+
+        .btn-info-custom:disabled {
+            background-color: #17a2b8; /* Same as normal state for disabled */
+            opacity: 0.65; /* Clearly indicate the button is disabled */
+        }
+
+        .btn-primary-custom {
+            padding: .5rem .8rem; /* Adjust padding to your preference */
+            font-size: 1rem; /* Set the font size that suits your design */
+            font-weight: 500; /* Adjust the font weight as needed */
+            color: #ffffff; /* Choose a text color that stands out */
+            background-color: #007bff; /* Bootstrap primary blue */
+            border: 2px solid transparent; /* Add or remove border as desired */
+            border-radius: .25rem; /* Roundness of the button corners */
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2); /* Shadow for depth (optional) */
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; /* Smooth transition for hover effects */
+
+            /* Increase specificity to override Bootstrap styles */
+            /* This is necessary if you don't want to use !important tags */
+            &.btn-primary {
+                background-color: #0069d9; /* Slightly darker blue */
+                border-color: #0062cc; /* Border color that complements the background */
+            }
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #0056b3; /* Darken button color on hover for feedback */
+            border-color: #0056b3; /* Border color to match the background on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Larger shadow for a lifted effect */
+        }
+
+        .btn-primary-custom:focus,
+        .btn-primary-custom.focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5); /* Bootstrap's approach for focus shadow */
+        }
+
+        .btn-primary-custom:active {
+            background-color: #004085; /* Even darker on active click */
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Smaller shadow for pressed effect */
+        }
+
+        .btn-primary-custom:disabled {
+            background-color: #007bff; /* Same as normal state for disabled */
+            opacity: 0.65; /* Clearly indicate the button is disabled */
+        }
+
+        .btn-success-custom {
+            padding: .5rem .75rem; /* Comfortable padding for interaction */
+            font-size: 1rem; /* Legible font size */
+            font-weight: 600; /* Bold font for clear call-to-action */
+            color: #fff; /* High contrast text color for readability */
+            background-color: #28a745; /* Bootstrap's success green */
+            border: 1px solid transparent; /* Optional: Adjust border as needed */
+            border-radius: .25rem; /* Consistent rounded corners */
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; /* Smooth transition for interactive states */
+        }
+
+        .btn-success-custom:hover {
+            background-color: #218838; /* A slightly darker green on hover for feedback */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); /* A more pronounced shadow on hover */
+        }
+
+        .btn-success-custom:focus, .btn-success-custom.focus {
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5); /* Bootstrap's focus glow effect */
+        }
+
+        .btn-success-custom:active {
+            background-color: #1e7e34; /* Even darker green to mimic a pressed button */
+            box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125); /* Inner shadow for a "pressed" look */
+        }
+
+        .btn-success-custom:disabled {
+            background-color: #28a745; /* Disabled state with the same green */
+            opacity: 0.65; /* Transparency to indicate it's not actionable */
+        }
+
+        .btn-secondary-custom {
+            padding: .5rem .75rem; /* Adjust padding to suit your design */
+            font-size: 1rem; /* Set an appropriate font size for readability */
+            font-weight: 500; /* Choose a weight that makes text clear and legible */
+            color: #333; /* Choose a text color that provides good contrast */
+            background-color: #6c757d; /* A neutral, secondary color from Bootstrap */
+            border: 1px solid #6c757d; /* Matching border color */
+            border-radius: .25rem; /* Standard border-radius for buttons */
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05); /* A light shadow for some depth */
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; /* Smooth transitions for state changes */
+        }
+
+        .btn-secondary-custom:hover {
+            color: #fff; /* Light text color on hover for contrast */
+            background-color: #5a6268; /* A slightly darker shade for the hover state */
+            border-color: #545b62; /* A darker border for depth */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); /* A more pronounced shadow on hover */
+        }
+
+        .btn-secondary-custom:focus, .btn-secondary-custom.focus {
+            box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5); /* A focus shadow that stands out */
+        }
+
+        .btn-secondary-custom:active {
+            background-color: #545b62; /* An even darker shade to indicate the button is being pressed */
+            box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125); /* An inner shadow for a pressed effect */
+        }
+
+        .btn-secondary-custom:disabled {
+            background-color: #6c757d; /* The standard secondary color for a disabled state */
+            opacity: 0.65; /* Transparency to suggest the button is not interactive */
+        }
     </style>
 </head>
 <body>

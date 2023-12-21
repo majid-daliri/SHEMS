@@ -309,5 +309,40 @@ def add_energy_price():
     return render_template('add_energy_price.html', form=form)
 
 
+@app.route('/energy_consumption/<int:service_location_id>/<string:time_resolution>')
+def energy_consumption(service_location_id, time_resolution):
+    if time_resolution == 'day':
+        query = """
+            SELECT DATE(e.Timestamp) AS date, SUM(e.Value) AS total_energy
+            FROM event_data e
+            JOIN enrolled_device ed ON e.Device_ID = ed.id
+            WHERE ed.Service_Location_ID = :service_location_id
+            GROUP BY date
+        """
+        con2 = sqlite3.connect(DB_PATH)
+        cur2 = con2.cursor()
+        data = cur2.execute(query, (service_location_id,)).fetchall()
+    elif time_resolution == 'month':
+        query = """
+            SELECT strftime('%m', e.Timestamp) AS month, SUM(e.Value) AS total_energy
+            FROM event_data e
+            JOIN enrolled_device ed ON e.Device_ID = ed.id
+            WHERE ed.Service_Location_ID = :service_location_id
+            GROUP BY month
+        """
+        con2 = sqlite3.connect(DB_PATH)
+        cur2 = con2.cursor()
+        data = cur2.execute(query, (service_location_id,)).fetchall()
+        pass
+    else:
+        return "Invalid time resolution"
+
+    # Extract data for the chart
+    labels = [str(row[0]) for row in data]
+    values = [row[1] for row in data]
+    con2.close()
+    return render_template('energy_consumption.html', labels=labels, values=values, time_resolution=time_resolution)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
